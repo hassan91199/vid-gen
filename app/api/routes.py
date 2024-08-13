@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import BackgroundTasks, APIRouter, HTTPException
 from pydantic import BaseModel
 from app.vid_gen import VidGen
 
@@ -20,18 +20,15 @@ def hello():
     return {"message": "Hello"}
 
 @router.post("/vid-gen")
-async def vid_gen(description_request: DescriptionRequest):
+async def vid_gen(description_request: DescriptionRequest, background_tasks: BackgroundTasks):
     try:
         vidgen = VidGen()
 
         script = vidgen.generate_script(description_request.description)
 
-        video_path = vidgen.make_video()
+        background_tasks.add_task(vidgen.make_video)
 
-        # Log the video path
-        logger.info(f"Video created at: {video_path}")
-
-        return {"path": video_path}
+        return {"script": script}
     except Exception as e:
         # Log the error with stack trace
         logger.error(f"Error occurred: {str(e)}", exc_info=True)
