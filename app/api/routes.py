@@ -2,6 +2,7 @@ import logging
 from fastapi import BackgroundTasks, APIRouter, HTTPException
 from pydantic import BaseModel
 from app.vid_gen import VidGen
+from shortGPT.gpt import gpt_yt
 
 router = APIRouter()
 
@@ -26,9 +27,15 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
 
         script = vidgen.generate_script(description_request.description)
 
+        title, caption = gpt_yt.generate_title_description_dict(script)
+
         background_tasks.add_task(vidgen.make_video)
 
-        return {"script": script}
+        return {
+            "title": title,
+            "caption": caption,
+            "script": script
+        }
     except Exception as e:
         # Log the error with stack trace
         logger.error(f"Error occurred: {str(e)}", exc_info=True)
