@@ -21,13 +21,13 @@ class ContentVideoEngine(AbstractContentEngine):
     def __init__(self, voiceModule: VoiceModule, script: str, background_music_name="", id="",
                  watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH):
         super().__init__(id, "general_video", language, voiceModule)
-        if not id:
-            if (watermark):
-                self._db_watermark = watermark
-            if background_music_name:
-                self._db_background_music_name = background_music_name
-            self._db_script = script
-            self._db_format_vertical = isVerticalFormat
+        # if not id:
+        if (watermark):
+            self._db_watermark = watermark
+        if background_music_name:
+            self._db_background_music_name = background_music_name
+        self._db_script = script
+        self._db_format_vertical = isVerticalFormat
 
         self.stepDict = {
             1:  self._generateTempAudio,

@@ -3,6 +3,7 @@ from fastapi import BackgroundTasks, APIRouter, HTTPException
 from pydantic import BaseModel
 from app.vid_gen import VidGen
 from shortGPT.gpt import gpt_yt
+from shortGPT.database.content_database import ContentDatabase
 
 router = APIRouter()
 
@@ -25,6 +26,12 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
     try:
         vidgen = VidGen()
 
+        content_db = ContentDatabase()
+        content_data_manager = content_db.createContentDataManager("general_video")
+        video_id = content_data_manager._getId()
+
+        vidgen.video_id = video_id
+
         script = vidgen.generate_script(description_request.description)
 
         title, caption = gpt_yt.generate_title_description_dict(script)
@@ -32,6 +39,7 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
         background_tasks.add_task(vidgen.make_video)
 
         return {
+            "video_id": video_id,
             "title": title,
             "caption": caption,
             "script": script

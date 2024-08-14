@@ -13,6 +13,7 @@ class VidGen:
         self.language = 'English'
         self.script = ""
         self.video_folder = None
+        self.video_id = ""
 
     def generate_script(self, message):
         self.script = gpt_chat_video.generateScript(message, self.language)
@@ -23,7 +24,7 @@ class VidGen:
         return self.script
 
     def make_video(self, progress=None):
-        videoEngine = ContentVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical)
+        videoEngine = ContentVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical, id=self.video_id)
         num_steps = videoEngine.get_total_steps()
         progress_counter = 0
 
