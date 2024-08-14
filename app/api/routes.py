@@ -1,17 +1,25 @@
+import json
 import logging
 from fastapi import BackgroundTasks, APIRouter, HTTPException
 from pydantic import BaseModel
 from app.vid_gen import VidGen
 from shortGPT.gpt import gpt_yt
 from shortGPT.database.content_database import ContentDatabase
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+content_db = ContentDatabase()
+
 class DescriptionRequest(BaseModel):
     description:str
+
+class GetVideoRequest(BaseModel):
+    video_id:str
 
 @router.get("/health")
 def health_check():
@@ -26,7 +34,6 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
     try:
         vidgen = VidGen()
 
-        content_db = ContentDatabase()
         content_data_manager = content_db.createContentDataManager("general_video")
         video_id = content_data_manager._getId()
 
@@ -44,6 +51,32 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
             "caption": caption,
             "script": script
         }
+    except Exception as e:
+        # Log the error with stack trace
+        logger.error(f"Error occurred: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
+
+@router.post("/get-video")
+async def vid_gen(request: GetVideoRequest):
+    try:
+        video = content_db.getContentDataManager(request.video_id, "general_video")
+        
+        if not video:
+            raise HTTPException(status_code=404, detail="No video found")
+        
+        last_completed_step = video.get("last_completed_step") or 0
+        total_steps = 10
+
+        data = {
+            "id": video.get("_id"),
+            "ready_to_upload": video.get("ready_to_upload"),
+            "last_completed_step": last_completed_step,
+            "total_steps": total_steps,
+            "percentage_completed": int((last_completed_step / total_steps) * 100),
+            "video_path": video.get("video_path"),
+        }
+        
+        return {"video": data}
     except Exception as e:
         # Log the error with stack trace
         logger.error(f"Error occurred: {str(e)}", exc_info=True)
