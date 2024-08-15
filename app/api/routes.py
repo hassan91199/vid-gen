@@ -18,7 +18,7 @@ content_db = ContentDatabase()
 class DescriptionRequest(BaseModel):
     description:str
 
-class GetVideoRequest(BaseModel):
+class VideoInfoRequest(BaseModel):
     video_id:str
 
 @router.get("/health")
@@ -56,8 +56,8 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
         logger.error(f"Error occurred: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
 
-@router.post("/get-video")
-async def vid_gen(request: GetVideoRequest):
+@router.post("/video-info")
+async def video_info(request: VideoInfoRequest):
     try:
         video = content_db.getContentDataManager(request.video_id, "general_video")
         
