@@ -6,7 +6,8 @@ from app.vid_gen import VidGen
 from shortGPT.gpt import gpt_yt
 from shortGPT.database.content_database import ContentDatabase
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
+import os
 
 router = APIRouter()
 
@@ -77,6 +78,26 @@ async def video_info(request: VideoInfoRequest):
         }
         
         return {"video": data}
+    except Exception as e:
+        # Log the error with stack trace
+        logger.error(f"Error occurred: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred while processing the request.")
+
+@router.post("/get-video")
+async def get_video(request: VideoInfoRequest):
+    try:
+        video = content_db.getContentDataManager(request.video_id, "general_video")
+        
+        if not video:
+            raise HTTPException(status_code=404, detail="No video found")
+        
+        video_path = video.get('video_path')
+
+        if not video_path or not os.path.exists(video_path):
+            raise HTTPException(status_code=404, detail="Video file not found")
+
+        return FileResponse(video_path, media_type="video/mp4")
+        
     except Exception as e:
         # Log the error with stack trace
         logger.error(f"Error occurred: {str(e)}", exc_info=True)
