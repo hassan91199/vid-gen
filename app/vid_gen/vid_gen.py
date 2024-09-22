@@ -3,7 +3,7 @@ import traceback
 
 from shortGPT.audio.edge_voice_module import EdgeTTSVoiceModule
 from shortGPT.config.languages import EDGE_TTS_VOICENAME_MAPPING
-from shortGPT.engine.content_video_engine import ContentVideoEngine
+from shortGPT.engine.short_video_engine import ShortVideoEngine
 from shortGPT.gpt import gpt_chat_video
 
 class VidGen:
@@ -24,7 +24,7 @@ class VidGen:
         return self.script
 
     def make_video(self, progress=None):
-        videoEngine = ContentVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical, id=self.video_id)
+        videoEngine = ShortVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical, id=self.video_id)
         num_steps = videoEngine.get_total_steps()
         progress_counter = 0
 
