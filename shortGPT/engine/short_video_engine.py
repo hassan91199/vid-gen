@@ -9,6 +9,8 @@ from shortGPT.audio.audio_duration import get_asset_duration
 from shortGPT.audio.voice_module import VoiceModule
 from shortGPT.config.asset_db import AssetDatabase
 from shortGPT.config.languages import Language
+from shortGPT.editing_framework.image_to_videos import convert_images_to_videos
+from shortGPT.api_utils.dalle_api import generate_simple_prompts, generate_image_urls
 from shortGPT.editing_framework.editing_engine import (EditingEngine,
                                                        EditingStep)
 from shortGPT.editing_utils import captions
@@ -82,16 +84,12 @@ class ShortVideoEngine(AbstractContentEngine):
     def _generateVideoUrls(self):
         timed_video_searches = self._db_timed_video_searches
         self.verifyParameters(captionsTimed=timed_video_searches)
-        timed_video_urls = []
-        used_links = []
-        for (t1, t2), search_terms in timed_video_searches:
-            url = ""
-            for query in reversed(search_terms):
-                url = getBestVideo(query, orientation_landscape=not self._db_format_vertical, used_vids=used_links)
-                if url:
-                    used_links.append(url.split('.hd')[0])
-                    break
-            timed_video_urls.append([[t1, t2], url])
+
+        # Use the DALL-E to create the images and then covert the images into videos
+        timed_prompts = generate_simple_prompts(timed_video_searches)
+        timed_image_urls = generate_image_urls(timed_prompts)
+        timed_video_urls = convert_images_to_videos(timed_image_urls, output_dir="videos/image_to_video")
+        
         self._db_timed_video_urls = timed_video_urls
 
     def _chooseBackgroundMusic(self):
