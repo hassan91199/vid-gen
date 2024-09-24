@@ -1,28 +1,36 @@
-import moviepy.editor as mp
 import requests
-from PIL import Image
-from io import BytesIO
 import os
 import time
+import subprocess
 
 def download_image(image_url, output_path):
     """Download image from URL and save it to the output path."""
     response = requests.get(image_url)
-    img = Image.open(BytesIO(response.content))
-    img.save(output_path)
+    with open(output_path, 'wb') as f:
+        f.write(response.content)
     return output_path
 
-def create_static_video(image_path, duration):
-    """Create a static video from an image for the specified duration."""
-    clip = mp.ImageClip(image_path).set_duration(duration)
-    
-    # Set the position to keep it centered
-    clip = clip.set_position("center")
-    
-    return clip
+def create_video_with_zoom(image_path, duration, output_path):
+    """Create a video with a zoom effect using FFmpeg."""
+    # Build the FFmpeg command
+    ffmpeg_command = [
+        'ffmpeg',
+        '-loop', '1',                       # Loop the image
+        '-i', image_path,                   # Input image
+        '-vf', f"zoompan=z='if(lte(in,{duration * 25}),zoom+0.002,zoom-0.002)':d={int(25 * duration)}:s=1024x1024:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':fps=25",
+        '-c:v', 'libx264',                  # Video codec
+        '-t', str(duration),                 # Duration of the output video
+        '-s', '1024x1024',                  # Output resolution
+        '-pix_fmt', 'yuv420p',              # Pixel format
+        '-y',                                # Overwrite output file if it exists
+        output_path                          # Output video file
+    ]
+
+    # Run the FFmpeg command
+    subprocess.run(ffmpeg_command)
 
 def convert_images_to_videos(image_data, output_dir="output_videos"):
-    """Convert image URLs into separate videos without zoom effects."""
+    """Convert image URLs into separate videos with zoom effects."""
     output_videos = []
 
     # Create output directory if it doesn't exist
@@ -43,15 +51,12 @@ def convert_images_to_videos(image_data, output_dir="output_videos"):
         temp_image_timestamp = int(time.time())
         image_path = download_image(image_url, f'{temp_image_path}/temp_image_{temp_image_timestamp}.png')
 
-        # Create a static video clip
-        video_clip = create_static_video(image_path, duration)
-        
         # Set video file path
         timestamp = int(time.time())
         video_filename = f"{output_dir}/video_{timestamp}.mp4"
 
-        # Write the static video to the file
-        video_clip.write_videofile(video_filename, codec='libx264', fps=24)
+        # Create a video with zoom effect using FFmpeg
+        create_video_with_zoom(image_path, duration, video_filename)
 
         # Append time range and video URL to the output
         output_videos.append([time_range, video_filename])
