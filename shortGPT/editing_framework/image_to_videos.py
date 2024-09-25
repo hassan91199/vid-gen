@@ -11,19 +11,19 @@ def download_image(image_url, output_path):
     return output_path
 
 def create_video_with_zoom(image_path, duration, output_path):
-    """Create a video with a zoom effect using FFmpeg."""
-    # Build the FFmpeg command
+    """Create a video with a zoom-in effect using FFmpeg."""
+    # Build the new FFmpeg command with 60 fps and zoom-in effect
     ffmpeg_command = [
         'ffmpeg',
         '-loop', '1',                       # Loop the image
+        '-framerate', '60',                 # Set input framerate to 60 fps
         '-i', image_path,                   # Input image
-        '-vf', f"zoompan=z='if(lte(in,{duration * 25}),zoom+0.002,zoom-0.002)':d={int(25 * duration)}:s=1024x1024:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':fps=25",
+        '-vf', f"scale=8000:-1,zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1024:fps=60",
+        '-t', str(duration),                # Duration of the output video
         '-c:v', 'libx264',                  # Video codec
-        '-t', str(duration),                 # Duration of the output video
-        '-s', '1024x1024',                  # Output resolution
         '-pix_fmt', 'yuv420p',              # Pixel format
-        '-y',                                # Overwrite output file if it exists
-        output_path                          # Output video file
+        '-y',                               # Overwrite output file if it exists
+        output_path                         # Output video file
     ]
 
     # Run the FFmpeg command
