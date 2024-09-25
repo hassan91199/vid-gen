@@ -2,6 +2,7 @@ import requests
 import os
 import time
 import subprocess
+import random
 
 def download_image(image_url, output_path):
     """Download image from URL and save it to the output path."""
@@ -11,26 +12,42 @@ def download_image(image_url, output_path):
     return output_path
 
 def create_video_with_zoom(image_path, duration, output_path):
-    """Create a video with a zoom-in effect using FFmpeg."""
-    # Build the new FFmpeg command with 60 fps and zoom-in effect
-    ffmpeg_command = [
+    """Create a video with a random zoom-in or zoom-out effect using FFmpeg."""
+    # Define zoom-in and zoom-out effects
+    zoom_in_command = [
         'ffmpeg',
-        '-loop', '1',                       # Loop the image
-        '-framerate', '60',                 # Set input framerate to 60 fps
-        '-i', image_path,                   # Input image
+        '-loop', '1',
+        '-framerate', '60',
+        '-i', image_path,
         '-vf', f"scale=8000:-1,zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1024:fps=60",
-        '-t', str(duration),                # Duration of the output video
-        '-c:v', 'libx264',                  # Video codec
-        '-pix_fmt', 'yuv420p',              # Pixel format
-        '-y',                               # Overwrite output file if it exists
-        output_path                         # Output video file
+        '-t', str(duration),
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-y',
+        output_path
     ]
 
-    # Run the FFmpeg command
-    subprocess.run(ffmpeg_command)
+    zoom_out_command = [
+        'ffmpeg',
+        '-loop', '1',
+        '-framerate', '60',
+        '-i', image_path,
+        '-vf', f"scale=8000:-1,zoompan=z='if(lte(zoom,1.0),1.5,max(1.001,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1024:fps=60",
+        '-t', str(duration),
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        '-y',
+        output_path
+    ]
+
+    # Randomly choose between zoom-in and zoom-out effect
+    chosen_command = random.choice([zoom_in_command, zoom_out_command])
+    
+    # Run the chosen FFmpeg command
+    subprocess.run(chosen_command)
 
 def convert_images_to_videos(image_data, output_dir="output_videos"):
-    """Convert image URLs into separate videos with zoom effects."""
+    """Convert image URLs into separate videos with random zoom effects."""
     output_videos = []
 
     # Create output directory if it doesn't exist
@@ -55,7 +72,7 @@ def convert_images_to_videos(image_data, output_dir="output_videos"):
         timestamp = int(time.time())
         video_filename = f"{output_dir}/video_{timestamp}.mp4"
 
-        # Create a video with zoom effect using FFmpeg
+        # Create a video with a random zoom effect using FFmpeg
         create_video_with_zoom(image_path, duration, video_filename)
 
         # Append time range and video URL to the output
