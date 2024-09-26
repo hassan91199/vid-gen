@@ -18,7 +18,7 @@ def generate_simple_prompts(input_data, style=None):
     
     return prompts
 
-def generate_image_urls(input_data, size="1024x1024"):
+def generate_image_urls(input_data, size="1024x1792"):
     image_urls = []
 
     api_key = ApiKeyManager.get_api_key("OPENAI")

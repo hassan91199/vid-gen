@@ -15,8 +15,8 @@ def create_video_with_zoom(image_path, duration, output_path, overlay_path=None)
     """Create a video with a random zoom-in or zoom-out effect using FFmpeg. Optionally add an overlay."""
 
     # Define the zoom effects
-    zoom_in_effect = f"scale=8000:-1,zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1024:fps=60"
-    zoom_out_effect = f"scale=8000:-1,zoompan=z='if(lte(zoom,1.0),1.5,max(1.001,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1024:fps=60"
+    zoom_in_effect = f"scale=8000:-1,zoompan=z='zoom+0.001':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1792:fps=60"
+    zoom_out_effect = f"scale=8000:-1,zoompan=z='if(lte(zoom,1.0),1.5,max(1.001,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={int(duration * 60)}:s=1024x1792:fps=60"
 
     # Randomly choose between zoom-in and zoom-out effect
     chosen_effect = random.choice([zoom_in_effect, zoom_out_effect])
@@ -45,7 +45,7 @@ def create_video_with_zoom(image_path, duration, output_path, overlay_path=None)
             '-i', image_path,
             '-i', overlay_path,
             '-filter_complex', f"[0:v] {chosen_effect}[bg]; \
-                                [1:v]scale=1024x1024,format=rgba,colorchannelmixer=aa=0.3[overlay]; \
+                                [1:v]scale=1024x1792,format=rgba,colorchannelmixer=aa=0.3[overlay]; \
                                 [bg][overlay]overlay=W-w-10:H-h-10",
             '-t', str(duration),
             '-c:v', 'libx264',
