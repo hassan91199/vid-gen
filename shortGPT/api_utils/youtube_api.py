@@ -1,5 +1,4 @@
 import requests
-
 from shortGPT.config.api_db import ApiKeyManager
 from app.logger import logger
 
@@ -11,7 +10,8 @@ def search_youtube_videos(search_term):
         search_term (str): The search term to find videos.
         
     Returns:
-        list or None: A list of video URLs or None if no videos are found or an error occurs.
+        list or None: A list of dictionaries containing video titles and URLs or 
+                      None if no videos are found or an error occurs.
     """
     
     url = "https://www.googleapis.com/youtube/v3/search"
@@ -30,11 +30,15 @@ def search_youtube_videos(search_term):
         
         video_results = response.json()
         if 'items' in video_results and video_results['items']:
-            video_urls = [
-                f"https://www.youtube.com/watch?v={item['id']['videoId']}" for item in video_results['items']
+            videos = [
+                {
+                    "title": item['snippet']['title'],
+                    "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}"
+                }
+                for item in video_results['items']
             ]
-            logger.info(f"Found YouTube video URLs: {video_urls}")
-            return video_urls
+            logger.info(f"Found YouTube videos: {videos}")
+            return videos
         else:
             logger.warning("No videos found for the given search term.")
             return None  # No videos found
