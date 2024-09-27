@@ -7,7 +7,7 @@ from shortGPT.api_utils.pexels_api import getBestVideo
 from shortGPT.audio import audio_utils
 from shortGPT.audio.audio_duration import get_asset_duration
 from shortGPT.audio.voice_module import VoiceModule
-from shortGPT.config.asset_db import AssetDatabase
+from shortGPT.config.asset_db import AssetDatabase, AssetType
 from shortGPT.config.languages import Language
 from shortGPT.editing_framework.image_to_videos import convert_images_to_videos
 from shortGPT.api_utils.dalle_api import generate_simple_prompts, generate_image_urls
@@ -16,6 +16,10 @@ from shortGPT.editing_framework.editing_engine import (EditingEngine,
 from shortGPT.editing_utils import captions
 from shortGPT.engine.abstract_content_engine import AbstractContentEngine
 from shortGPT.gpt import gpt_editing, gpt_translate, gpt_yt
+from shortGPT.gpt.gpt_bg_music_search_term import generate_search_term
+from shortGPT.api_utils.pexels_api import search_audio_on_pexels
+from shortGPT.api_utils.youtube_api import search_youtube_videos
+from app.logger import logger
 
 
 class ShortVideoEngine(AbstractContentEngine):
@@ -93,8 +97,27 @@ class ShortVideoEngine(AbstractContentEngine):
         self._db_timed_video_urls = timed_video_urls
 
     def _chooseBackgroundMusic(self):
-        if self._db_background_music_name:
-            self._db_background_music_url = AssetDatabase.get_asset_link(self._db_background_music_name)
+        """Select background music based on the generated search term from the video script."""
+        
+        search_term = generate_search_term(self._db_script)
+
+        if not search_term:
+            logger.warning("No search term generated. Background music selection aborted.")
+            return
+        
+        yt_results = search_youtube_videos(search_term)
+
+        if yt_results:
+            title = yt_results[0]['title']
+            url = yt_results[0]['url']
+
+            AssetDatabase.add_remote_asset(name=title, asset_type=AssetType.BACKGROUND_MUSIC, url=url)
+            latest_df = AssetDatabase.get_df()
+            
+            self._db_background_music_url = AssetDatabase.get_asset_link(title)
+        else:
+            logger.warning("No YouTube results found for the search term.")
+            return
 
     def _prepareBackgroundAssets(self):
         self.verifyParameters(voiceover_audio_url=self._db_audio_path)
