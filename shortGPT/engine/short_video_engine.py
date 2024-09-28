@@ -157,7 +157,7 @@ class ShortVideoEngine(AbstractContentEngine):
             if (self._db_background_music_url):
                 videoEditor.addEditingStep(EditingStep.ADD_BACKGROUND_MUSIC, {'url': self._db_background_music_url,
                                                                               'loop_background_music': self._db_voiceover_duration,
-                                                                              "volume_percentage": 0.16})
+                                                                              "volume_percentage": 0.24})
             for (t1, t2), video_url in self._db_timed_video_urls:
                 videoEditor.addEditingStep(EditingStep.ADD_BACKGROUND_VIDEO, {'url': video_url,
                                                                               'set_time_start': t1,
