@@ -104,20 +104,34 @@ class ShortVideoEngine(AbstractContentEngine):
         if not search_term:
             logger.warning("No search term generated. Background music selection aborted.")
             return
-        
+
         yt_results = search_youtube_videos(search_term)
 
         if yt_results:
+            # Get the first result's title and URL
             title = yt_results[0]['title']
             url = yt_results[0]['url']
 
+            # Add the remote asset to the database
             AssetDatabase.add_remote_asset(name=title, asset_type=AssetType.BACKGROUND_MUSIC, url=url)
-            latest_df = AssetDatabase.get_df()
             
-            self._db_background_music_url = AssetDatabase.get_asset_link(title)
+            # Get the asset link
+            asset_link = AssetDatabase.get_asset_link(title)
+
+            if asset_link:
+                # Attempt to trim silence from the audio
+                trimmed_audio = audio_utils.trim_silence(asset_link)
+
+                if trimmed_audio:
+                    self._db_background_music_url = trimmed_audio
+                    logger.info(f"Background music selected: {title}. Trimmed audio saved: {trimmed_audio}")
+                else:
+                    logger.error("Trimming silence failed. Background music selection aborted.")
+            else:
+                logger.warning("Asset link not found for the title: %s", title)
+
         else:
-            logger.warning("No YouTube results found for the search term.")
-            return
+            logger.warning("No YouTube results found for the search term: %s", search_term)
 
     def _prepareBackgroundAssets(self):
         self.verifyParameters(voiceover_audio_url=self._db_audio_path)
