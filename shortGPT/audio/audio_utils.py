@@ -4,6 +4,8 @@ import subprocess
 import yt_dlp
 
 from shortGPT.audio.audio_duration import get_asset_duration
+from datetime import datetime
+from app.logger import logger
 
 CONST_CHARS_PER_SEC = 20.5  # Arrived to this result after whispering a ton of shorts and calculating the average number of characters per second of speech.
 
@@ -95,4 +97,29 @@ def run_background_audio_split(sound_file_path):
             return None
     except Exception:
         # If spleeter crashes, return None
+        return None
+    
+def trim_silence(input_file: str, silence_threshold: str = '-15dB'):
+    # Get the directory of the input file
+    input_dir = os.path.dirname(input_file)
+    
+    # Generate output file name with current timestamp in the same directory
+    timestamp = int(datetime.now().timestamp())
+    output_file = os.path.join(input_dir, f"trimmed_{timestamp}.wav")
+    
+    # Construct the ffmpeg command
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-af', f"silenceremove=1:0:{silence_threshold}",
+        output_file
+    ]
+    
+    try:
+        # Run the command
+        subprocess.run(command, check=True)
+        logger.info(f"Successfully trimmed silence from {input_file}. Output file: {output_file}")
+        return os.path.abspath(output_file)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error trimming silence: {e}")
         return None
