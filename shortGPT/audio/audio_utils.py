@@ -1,6 +1,7 @@
 import os
 import subprocess
 import requests
+import time
 
 import yt_dlp
 
@@ -64,7 +65,7 @@ def ChunkForAudio(alltext, chunk_size=2500):
         chunks.append(curr_chunk)
     return chunks
 
-def audioToText(file_path):
+def audioToText(file_path, max_retries=5):
     api_key = ApiKeyManager.get_api_key("OPENAI")
     url = "https://api.openai.com/v1/audio/transcriptions"
 
@@ -82,19 +83,28 @@ def audioToText(file_path):
         "response_format": "verbose_json",
     }
 
-    try:
-        response = requests.post(url, headers=headers, files=files, data=data)
-        response.raise_for_status()  # Raise exception for HTTP errors
+    retries = 0
 
-        if response.status_code == 200:
-            return response.json()  # Return JSON response if successful
+    while retries < max_retries:
+        try:
+            response = requests.post(url, headers=headers, files=files, data=data)
+            response.raise_for_status()  # Raise exception for HTTP errors
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error during whisper transcription: {e}")
-        return None
+            if response.status_code == 200:
+                return response.json()  # Return JSON response if successful
 
-    finally:
-        files["file"].close()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error during whisper transcription attempt {retries+1}: {e}")
+            retries += 1
+            if retries < max_retries:
+                logger.info(f"Retrying... ({retries}/{max_retries})")
+                time.sleep(3)
+            else:
+                logger.error("Max retries reached. Returning null.")
+                return None
+
+    files["file"].close()
+    return None  # If all retries fail, return None
 
 def getWordsPerSec(filename):
     a = audioToText(filename)
