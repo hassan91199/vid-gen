@@ -1,9 +1,11 @@
 import os
 import subprocess
+import requests
 
 import yt_dlp
 
 from shortGPT.audio.audio_duration import get_asset_duration
+from shortGPT.config.api_db import ApiKeyManager
 from datetime import datetime
 from app.logger import logger
 
@@ -62,15 +64,37 @@ def ChunkForAudio(alltext, chunk_size=2500):
         chunks.append(curr_chunk)
     return chunks
 
+def audioToText(file_path):
+    api_key = ApiKeyManager.get_api_key("OPENAI")
+    url = "https://api.openai.com/v1/audio/transcriptions"
 
-def audioToText(filename, model_size="base"):
-    from whisper_timestamped import load_model, transcribe_timestamped
-    global WHISPER_MODEL
-    if (WHISPER_MODEL == None):
-        WHISPER_MODEL = load_model(model_size)
-    gen = transcribe_timestamped(WHISPER_MODEL, filename, verbose=False, fp16=False)
-    return gen
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+    }
 
+    files = {
+        "file": open(file_path, "rb"),
+    }
+
+    data = {
+        "timestamp_granularities[]": "word",
+        "model": "whisper-1",
+        "response_format": "verbose_json",
+    }
+
+    try:
+        response = requests.post(url, headers=headers, files=files, data=data)
+        response.raise_for_status()  # Raise exception for HTTP errors
+
+        if response.status_code == 200:
+            return response.json()  # Return JSON response if successful
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error during whisper transcription: {e}")
+        return None
+
+    finally:
+        files["file"].close()
 
 def getWordsPerSec(filename):
     a = audioToText(filename)

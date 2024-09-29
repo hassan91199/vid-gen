@@ -25,11 +25,11 @@ def interpolateTimeFromDict(word_position, d):
 def getTimestampMapping(whisper_analysis):
     index = 0
     locationToTimestamp = {}
-    for segment in whisper_analysis['segments']:
-        for word in segment['words']:
-            newIndex = index + len(word['text'])+1
-            locationToTimestamp[(index, newIndex)] = word['end']
-            index = newIndex
+
+    for word in whisper_analysis['words']:
+        newIndex = index + len(word['word'])+1
+        locationToTimestamp[(index, newIndex)] = word['end']
+        index = newIndex
     return locationToTimestamp
 
 
