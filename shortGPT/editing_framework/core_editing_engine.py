@@ -1,5 +1,6 @@
 from shortGPT.config.path_utils import get_program_path
 import os
+import random
 magick_path = get_program_path("magick")
 if magick_path:
     os.environ['IMAGEMAGICK_BINARY'] = magick_path
@@ -206,11 +207,14 @@ class CoreEditingEngine:
 
     def process_text_asset(self, asset: Dict[str, Any]) -> TextClip:
         text_clip_params = asset['parameters']
-        
+        colors = ["yellow", "white"]
+        weights = [1, 3]  # This gives 'yellow' a 1/4 chance, 'white' a 3/4 chance
         if not (any(key in text_clip_params for key in ['text','fontsize', 'size'])):
             raise Exception('You must include at least a size or a fontsize to determine the size of your text')
         text_clip_params['txt'] = text_clip_params['text']
         clip_info = {k: text_clip_params[k] for k in ('txt', 'fontsize', 'font', 'color', 'stroke_width', 'stroke_color', 'size', 'kerning', 'method', 'align') if k in text_clip_params}
+        # Randomly assign either 'yellow' or 'white', with 'white' having a higher chance
+        clip_info['color'] = random.choices(colors, weights)[0]
         clip = TextClip(**clip_info)
 
         return self.process_common_visual_actions(clip, asset['actions'])
