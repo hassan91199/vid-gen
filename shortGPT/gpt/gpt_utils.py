@@ -149,33 +149,40 @@ def gpt4o_completion(chat_prompt, system_message, json_schema):
     # Logging the request data
     logger.info(f"Sending request to GPT-4o with system message: {system_message} and user prompt: {chat_prompt}")
 
-    try:
-        # Send the POST request to OpenAI
-        response = requests.post(api_url, headers=headers, json=data)
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            # Send the POST request to OpenAI
+            response = requests.post(api_url, headers=headers, json=data)
 
-        # Check for a successful response
-        if response.status_code == 200:
-            logger.info("Request to GPT-4o was successful.")
-            response_data = response.json()
-            logger.info(f"response.json(): {response_data}")
+            # Check for a successful response
+            if response.status_code == 200:
+                logger.info("Request to GPT-4o was successful.")
+                response_data = response.json()
+                logger.info(f"response.json(): {response_data}")
 
-            # Extract relevant data from the response
-            if 'choices' in response_data and len(response_data['choices']) > 0:
-                content = response_data['choices'][0]['message']['content']
-                # Parse the content as JSON to get title, description, and script
-                return json.loads(content)  # Assuming content is in JSON format
+                # Extract relevant data from the response
+                if 'choices' in response_data and len(response_data['choices']) > 0:
+                    content = response_data['choices'][0]['message']['content']
+                    # Parse the content as JSON to get title, description, and script
+                    return json.loads(content)  # Assuming content is in JSON format
+                else:
+                    logger.error("No choices found in the response.")
+                    return None
             else:
-                logger.error("No choices found in the response.")
-                return {"error": "No choices found in the response."}
-        else:
-            logger.error(f"Failed to get a valid response from GPT-4o: {response.status_code}, {response.text}")
-            return {"error": response.status_code, "message": response.text}
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error communicating with OpenAI: {str(e)}")
-        return {"error": "Request failed", "message": str(e)}
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON response: {str(e)}")
-        return {"error": "JSON decode error", "message": str(e)}
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {str(e)}")
-        return {"error": "Unexpected error", "message": str(e)}
+                logger.error(f"Failed to get a valid response from GPT-4o: {response.status_code}, {response.text}")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error communicating with OpenAI: {str(e)}")
+            if attempt < max_retries - 1:  # Only retry if not the last attempt
+                logger.info("Retrying...")
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON response: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {str(e)}")
+            return None
+
+    logger.error("Max retries reached. Returning None.")
+    return None
