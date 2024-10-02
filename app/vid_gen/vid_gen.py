@@ -16,7 +16,7 @@ class VidGen:
         self.video_id = ""
 
     def generate_script(self, message):
-        self.script = gpt_chat_video.generateScript(message, self.language)
+        self.script = gpt_chat_video.generateScript(message)
         return self.script
 
     def correct_script(self, correction):
