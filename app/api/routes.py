@@ -1,18 +1,14 @@
-import json
-import logging
+import os
+
 from fastapi import BackgroundTasks, APIRouter, HTTPException
 from pydantic import BaseModel
 from app.vid_gen import VidGen
 from shortGPT.gpt import gpt_yt
 from shortGPT.database.content_database import ContentDatabase
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse
-import os
+from app.logger import logger
 
 router = APIRouter()
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 content_db = ContentDatabase()
 
