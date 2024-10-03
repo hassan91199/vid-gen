@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 content_db = ContentDatabase()
 
-class DescriptionRequest(BaseModel):
-    description:str
+class VidGenRequest(BaseModel):
+    prompt:str
 
 class VideoInfoRequest(BaseModel):
     video_id:str
@@ -31,7 +31,7 @@ def hello():
     return {"message": "Hello"}
 
 @router.post("/vid-gen")
-async def vid_gen(description_request: DescriptionRequest, background_tasks: BackgroundTasks):
+async def vid_gen(request: VidGenRequest, background_tasks: BackgroundTasks):
     try:
         vidgen = VidGen()
 
@@ -40,7 +40,7 @@ async def vid_gen(description_request: DescriptionRequest, background_tasks: Bac
 
         vidgen.video_id = video_id
 
-        script = vidgen.generate_script(description_request.description)
+        script = vidgen.generate_script(request.prompt)
 
         title, caption = gpt_yt.generate_title_description_dict(script)
 
