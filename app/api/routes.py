@@ -7,6 +7,7 @@ from shortGPT.gpt import gpt_yt
 from shortGPT.database.content_database import ContentDatabase
 from fastapi.responses import FileResponse
 from app.logger import logger
+from typing import Literal
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ content_db = ContentDatabase()
 
 class VidGenRequest(BaseModel):
     prompt:str
+    art_style:Literal['normal', 'anime', 'charcoal', 'children_book', 'comic_book', 'disney-toon', 'expressionism', 'gta_v', 'minecraft', 'photo_realism', 'studio_ghibli', 'water_color'] = 'normal'
 
 class VideoInfoRequest(BaseModel):
     video_id:str
@@ -29,7 +31,7 @@ def hello():
 @router.post("/vid-gen")
 async def vid_gen(request: VidGenRequest, background_tasks: BackgroundTasks):
     try:
-        vidgen = VidGen()
+        vidgen = VidGen(art_style=request.art_style)
 
         content_data_manager = content_db.createContentDataManager("general_video")
         video_id = content_data_manager._getId()

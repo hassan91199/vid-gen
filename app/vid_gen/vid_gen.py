@@ -7,13 +7,14 @@ from shortGPT.engine.short_video_engine import ShortVideoEngine
 from shortGPT.gpt import gpt_chat_video
 
 class VidGen:
-    def __init__(self):
+    def __init__(self, art_style='normal'):
         self.isVertical = True
         self.voice_module = EdgeTTSVoiceModule('en-AU-WilliamNeural')
         self.language = 'English'
         self.script = ""
         self.video_folder = None
         self.video_id = ""
+        self.art_style = art_style
 
     def generate_script(self, message):
         self.script = gpt_chat_video.generateScript(message)
@@ -24,7 +25,7 @@ class VidGen:
         return self.script
 
     def make_video(self, progress=None):
-        videoEngine = ShortVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical, id=self.video_id)
+        videoEngine = ShortVideoEngine(voiceModule=self.voice_module, script=self.script, isVerticalFormat=self.isVertical, id=self.video_id, art_style=self.art_style)
         num_steps = videoEngine.get_total_steps()
         progress_counter = 0
 

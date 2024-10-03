@@ -25,7 +25,7 @@ from app.logger import logger
 class ShortVideoEngine(AbstractContentEngine):
 
     def __init__(self, voiceModule: VoiceModule, script: str, background_music_name="", id="",
-                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH):
+                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH, art_style='normal'):
         super().__init__(id, "general_video", language, voiceModule)
         # if not id:
         if (watermark):
@@ -34,6 +34,7 @@ class ShortVideoEngine(AbstractContentEngine):
             self._db_background_music_name = background_music_name
         self._db_script = script
         self._db_format_vertical = isVerticalFormat
+        self.art_style = art_style
 
         self.stepDict = {
             1:  self._generateTempAudio,
@@ -90,7 +91,7 @@ class ShortVideoEngine(AbstractContentEngine):
         self.verifyParameters(captionsTimed=timed_video_searches)
 
         # Use the DALL-E to create the images and then covert the images into videos
-        timed_prompts = generate_simple_prompts(timed_video_searches)
+        timed_prompts = generate_simple_prompts(timed_video_searches, style=self.art_style)
         timed_image_urls = generate_image_urls(timed_prompts)
         timed_video_urls = convert_images_to_videos(timed_image_urls, output_dir="videos/image_to_video")
         
