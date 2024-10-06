@@ -1,5 +1,6 @@
 import datetime
 import os
+import subprocess
 import re
 import shutil
 
@@ -66,35 +67,43 @@ class TestShortVideoEngine(ShortVideoEngine):
         pass
 
     def _editAndRenderShort(self):
-        self.verifyParameters(
-            voiceover_audio_url=self._db_audio_path)
+        # Verify required parameters
+        self.verifyParameters(voiceover_audio_url=self._db_audio_path)
 
-        outputPath = self.dynamicAssetDir+"rendered_video.mp4"
-        if not (os.path.exists(outputPath)):
-            self.logger("Rendering short: Starting automated editing...")
-            videoEditor = EditingEngine()
-            videoEditor.addEditingStep(EditingStep.ADD_VOICEOVER_AUDIO, {
-                                       'url': self._db_audio_path})
-            if (self._db_background_music_url):
-                videoEditor.addEditingStep(EditingStep.ADD_BACKGROUND_MUSIC, {'url': self._db_background_music_url,
-                                                                              'loop_background_music': self._db_voiceover_duration,
-                                                                              "volume_percentage": 0.24})
-            for (t1, t2), video_url in self._db_timed_video_urls:
-                videoEditor.addEditingStep(EditingStep.ADD_BACKGROUND_VIDEO, {'url': video_url,
-                                                                              'set_time_start': t1,
-                                                                              'set_time_end': t2})
-            if (self._db_format_vertical):
-                caption_type = EditingStep.ADD_CAPTION_SHORT_ARABIC if self._db_language == Language.ARABIC.value else EditingStep.ADD_CAPTION_SHORT
+        outputPath = os.path.join(self.dynamicAssetDir, "rendered_video.mp4")
+
+        # Create a temporary file list for FFmpeg
+        temp_file = os.path.join(self.dynamicAssetDir, "file_list.txt")
+        with open(temp_file, 'w') as f:
+            for _, video_path in self._db_timed_video_urls:
+                # Convert to absolute path and write to the file
+                absolute_video_path = os.path.abspath(video_path)
+                f.write(f"file '{absolute_video_path}'\n")  # Write each video file in the required format
+
+        # Construct the ffmpeg command to concatenate videos using the file list
+        ffmpeg_command = [
+            'ffmpeg', 
+            '-f', 'concat', 
+            '-safe', '0', 
+            '-i', temp_file, 
+            '-c', 'copy',  # Copy the codec without re-encoding
+            outputPath
+        ]
+
+        # Run the ffmpeg command and log any errors
+        try:
+            result = subprocess.run(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            if result.returncode != 0:
+                logger.info(f"FFmpeg error: {result.stderr}")
             else:
-                caption_type = EditingStep.ADD_CAPTION_LANDSCAPE_ARABIC if self._db_language == Language.ARABIC.value else EditingStep.ADD_CAPTION_LANDSCAPE
+                logger.info(f"Video created successfully at {outputPath}")
+        except Exception as e:
+            logger.info(f"Error running FFmpeg: {e}")
 
-            for (t1, t2), text in self._db_timed_captions:
-                videoEditor.addEditingStep(caption_type, {'text': text.upper(),
-                                                          'set_time_start': t1,
-                                                          'set_time_end': t2})
+        # Clean up the temporary file
+        os.remove(temp_file)
 
-            videoEditor.renderVideo(outputPath, logger= self.logger if self.logger is not self.default_logger else None)
-
+        # Save the final video path
         self._db_video_path = outputPath
 
     def _addMetadata(self):
