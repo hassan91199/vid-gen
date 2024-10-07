@@ -2,6 +2,7 @@ import datetime
 import os
 import subprocess
 import re
+import math
 import shutil
 
 from shortGPT.api_utils.pexels_api import getBestVideo
@@ -85,7 +86,7 @@ class TestShortVideoEngine(ShortVideoEngine):
 
             # Construct xfade transitions
             if index > 0:  # Only start adding xfade after the first video
-                offset = (((t2 - t1) + previous_offset) - transition_duration)   # Set offset to the start of the current video
+                offset = math.floor((((t2 - t1) + previous_offset) - transition_duration))   # Set offset to the start of current video
                 previous_offset = offset
                 # Create a filter for xfade between the previous video and the current video
                 filter_complex_parts.append(f"xfade=transition=fade:duration={transition_duration}:offset={offset}")
