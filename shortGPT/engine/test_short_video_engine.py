@@ -72,23 +72,38 @@ class TestShortVideoEngine(ShortVideoEngine):
 
         outputPath = os.path.join(self.dynamicAssetDir, "rendered_video.mp4")
 
-        # Create a temporary file list for FFmpeg
-        temp_file = os.path.join(self.dynamicAssetDir, "file_list.txt")
-        with open(temp_file, 'w') as f:
-            for _, video_path in self._db_timed_video_urls:
-                # Convert to absolute path and write to the file
-                absolute_video_path = os.path.abspath(video_path)
-                f.write(f"file '{absolute_video_path}'\n")  # Write each video file in the required format
+        transition_duration = 1
+        filter_complex_parts = []
+        ffmpeg_input_args = []
+        previous_offset = 0
 
-        # Construct the ffmpeg command to concatenate videos using the file list
+        # Create the input arguments and filter complex parts
+        for index, ((t1, t2), video_url) in enumerate(self._db_timed_video_urls):
+            # Convert to absolute path
+            absolute_video_path = os.path.abspath(video_url)
+            ffmpeg_input_args.extend(['-i', absolute_video_path])  # Add each input separately
+
+            # Construct xfade transitions
+            if index > 0:  # Only start adding xfade after the first video
+                offset = (((t2 - t1) + previous_offset) - transition_duration)   # Set offset to the start of the current video
+                previous_offset = offset
+                # Create a filter for xfade between the previous video and the current video
+                filter_complex_parts.append(f"xfade=transition=fade:duration={transition_duration}:offset={offset}")
+
+        # Join all parts of the filter complex with commas
+        filter_complex = ",".join(filter_complex_parts)
+
+        logger.info(f"filter_complex: {filter_complex}")
+
+        # Construct the final ffmpeg command
         ffmpeg_command = [
-            'ffmpeg', 
-            '-f', 'concat', 
-            '-safe', '0', 
-            '-i', temp_file, 
-            '-c', 'copy',  # Copy the codec without re-encoding
-            outputPath
+            'ffmpeg',
+        ] + ffmpeg_input_args + [
+            '-filter_complex', filter_complex,
+            '-y', outputPath  # Overwrite output file if it exists
         ]
+
+        logger.info(f"ffmpeg_command: {ffmpeg_command}")
 
         # Run the ffmpeg command and log any errors
         try:
@@ -99,9 +114,6 @@ class TestShortVideoEngine(ShortVideoEngine):
                 logger.info(f"Video created successfully at {outputPath}")
         except Exception as e:
             logger.info(f"Error running FFmpeg: {e}")
-
-        # Clean up the temporary file
-        os.remove(temp_file)
 
         # Save the final video path
         self._db_video_path = outputPath
