@@ -1,7 +1,7 @@
 from shortGPT.gpt import gpt_utils
 from app.logger import logger
 import json
-def generateScript(prompt: str) -> str:
+def generateScript(prompt: str, video_duration: str = '30-60') -> str:
     """
     Generates a video script based on the provided prompt.
 
@@ -14,13 +14,14 @@ def generateScript(prompt: str) -> str:
     chat_prompt = prompt
 
     system_message = (
-        "You are an AI that generates high-quality video scripts based on the provided prompt. "
-        "Your response should include only the main script content. Ensure that the script is structured logically and flows well, "
-        "without including any narration or direction. Focus solely on the content itself, making it engaging and informative for the audience. "
-        "Please avoid any newline characters, extra whitespace, or special characters at the beginning or end of the script. "
-        "Ensure the entire script is a single continuous text without breaks, unnecessary punctuation, or non-alphanumeric characters. "
-        "Use clear and concise language to maintain clarity and coherence throughout."
-    )
+        "You are an AI that generates high-quality video scripts designed for {duration} second videos based on the provided prompt. "
+        "Your task is to create a script that is both engaging and informative for the intended audience. "
+        "The content should be well-organized, with a natural flow and progression, focusing on clear communication of key ideas. "
+        "Avoid including any specific narration cues, scene direction, or formatting instructions. "
+        "Deliver the entire script as a continuous block of text without line breaks, unnecessary punctuation, or non-alphanumeric characters. "
+        "Ensure the language is simple, concise, and effective in conveying the message within the time constraints. "
+        "Keep the audience in mind and make the script compelling, ensuring it holds attention from start to finish."
+    ).format(duration=video_duration)
 
     json_schema = {
         "name": "video_script_simple_schema",

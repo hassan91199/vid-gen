@@ -16,8 +16,8 @@ class VidGen:
         self.video_id = ""
         self.art_style = art_style
 
-    def generate_script(self, message):
-        self.script = gpt_chat_video.generateScript(message)
+    def generate_script(self, message, video_duration: str = '30-60'):
+        self.script = gpt_chat_video.generateScript(message, video_duration=video_duration)
         return self.script
 
     def correct_script(self, correction):

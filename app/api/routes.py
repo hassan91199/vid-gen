@@ -16,6 +16,7 @@ content_db = ContentDatabase()
 class VidGenRequest(BaseModel):
     prompt:str
     art_style:Literal['normal', 'anime', 'charcoal', 'children_book', 'comic_book', 'disney-toon', 'expressionism', 'gta_v', 'minecraft', 'photo_realism', 'studio_ghibli', 'water_color'] = 'normal'
+    video_duration:Literal['30-60', '60-90'] = '30-60'
 
 class VideoInfoRequest(BaseModel):
     video_id:str
@@ -38,7 +39,7 @@ async def vid_gen(request: VidGenRequest, background_tasks: BackgroundTasks):
 
         vidgen.video_id = video_id
 
-        script = vidgen.generate_script(request.prompt)
+        script = vidgen.generate_script(request.prompt, video_duration=request.video_duration)
 
         title, caption = gpt_yt.generate_title_description_dict(script)
 
