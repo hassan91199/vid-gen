@@ -25,7 +25,7 @@ from app.logger import logger
 class ShortVideoEngine(AbstractContentEngine):
 
     def __init__(self, voiceModule: VoiceModule, script: str, background_music_name="", id="",
-                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH, art_style='normal'):
+                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH, art_style='normal', apply_background_music=False):
         super().__init__(id, "general_video", language, voiceModule)
         # if not id:
         if (watermark):
@@ -35,6 +35,7 @@ class ShortVideoEngine(AbstractContentEngine):
         self._db_script = script
         self._db_format_vertical = isVerticalFormat
         self.art_style = art_style
+        self.apply_background_music = apply_background_music
 
         self.stepDict = {
             1:  self._generateTempAudio,
@@ -100,6 +101,9 @@ class ShortVideoEngine(AbstractContentEngine):
     def _chooseBackgroundMusic(self):
         """Select background music based on the generated search term from the video script."""
         
+        if not self.apply_background_music:
+            return
+
         search_term = generate_search_term(self._db_script)
 
         if not search_term:

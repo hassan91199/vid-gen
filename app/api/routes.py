@@ -17,6 +17,7 @@ class VidGenRequest(BaseModel):
     prompt:str
     art_style:Literal['normal', 'anime', 'charcoal', 'children_book', 'comic_book', 'disney_toon', 'expressionism', 'gta_v', 'minecraft', 'photo_realism', 'studio_ghibli', 'water_color'] = 'normal'
     video_duration:Literal['30-60', '60-90'] = '30-60'
+    apply_background_music:bool = False
 
 class VideoInfoRequest(BaseModel):
     video_id:str
@@ -32,7 +33,7 @@ def hello():
 @router.post("/vid-gen")
 async def vid_gen(request: VidGenRequest, background_tasks: BackgroundTasks):
     try:
-        vidgen = VidGen(art_style=request.art_style)
+        vidgen = VidGen(art_style=request.art_style, apply_background_music=request.apply_background_music)
 
         content_data_manager = content_db.createContentDataManager("general_video")
         video_id = content_data_manager._getId()
