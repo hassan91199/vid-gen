@@ -15,7 +15,7 @@ content_db = ContentDatabase()
 
 class VidGenRequest(BaseModel):
     prompt:str
-    art_style:Literal['normal', 'anime', 'charcoal', 'children_book', 'comic_book', 'disney-toon', 'expressionism', 'gta_v', 'minecraft', 'photo_realism', 'studio_ghibli', 'water_color'] = 'normal'
+    art_style:Literal['normal', 'anime', 'charcoal', 'children_book', 'comic_book', 'disney_toon', 'expressionism', 'gta_v', 'minecraft', 'photo_realism', 'studio_ghibli', 'water_color'] = 'normal'
     video_duration:Literal['30-60', '60-90'] = '30-60'
 
 class VideoInfoRequest(BaseModel):
