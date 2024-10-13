@@ -28,8 +28,8 @@ from app.logger import logger
 class TestShortVideoEngine(ShortVideoEngine):
 
     def __init__(self, voiceModule: VoiceModule, script: str, background_music_name="", id="",
-                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH, art_style='normal'):
-        super().__init__(voiceModule=voiceModule, script=script, isVerticalFormat=isVerticalFormat, id=id, art_style=art_style)
+                 watermark=None, isVerticalFormat=False, language: Language = Language.ENGLISH, art_style='normal', apply_background_music=False):
+        super().__init__(voiceModule=voiceModule, script=script, isVerticalFormat=isVerticalFormat, id=id, art_style=art_style, apply_background_music=apply_background_music)
         
         self._db_temp_audio_path = ".editing_assets/general_video_assets/6136eb114f5f40d8a671f455/temp_audio_path.wav"
         self._db_audio_path = ".editing_assets/general_video_assets/6136eb114f5f40d8a671f455/temp_audio_path.wav"
