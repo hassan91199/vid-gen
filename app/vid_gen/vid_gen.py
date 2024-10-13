@@ -17,8 +17,8 @@ class VidGen:
         self.art_style = art_style
         self.apply_background_music = apply_background_music
 
-    def generate_script(self, message, video_duration: str = '30-60'):
-        self.script = gpt_chat_video.generateScript(message, video_duration=video_duration)
+    def generate_script(self, message, video_duration: str = '30-60', script: str = None):
+        self.script = script if script else gpt_chat_video.generateScript(message, video_duration=video_duration)
         return self.script
 
     def correct_script(self, correction):

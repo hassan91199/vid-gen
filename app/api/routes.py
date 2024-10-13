@@ -14,7 +14,8 @@ router = APIRouter()
 content_db = ContentDatabase()
 
 class VidGenRequest(BaseModel):
-    prompt:str
+    prompt:str = None
+    script:str = None
     art_style:Literal['normal', 'comic_book', 'disney_toon', 'studio_ghibli', 'childrens_book', 'photo_realism', 'minecraft', 'watercolor', 'expressionism', 'charcoal', 'gtav', 'anime', 'normal_v2'] = 'normal'
     video_duration:Literal['30-60', '60-90'] = '60-90'
     apply_background_music:bool = False
@@ -40,7 +41,7 @@ async def vid_gen(request: VidGenRequest, background_tasks: BackgroundTasks):
 
         vidgen.video_id = video_id
 
-        script = vidgen.generate_script(request.prompt, video_duration=request.video_duration)
+        script = vidgen.generate_script(request.prompt, video_duration=request.video_duration, script=request.script)
 
         title, caption = gpt_yt.generate_title_description_dict(script)
 
